@@ -1,0 +1,36 @@
+---
+    - name: Install dependencias
+      ansible.builtin.apt:
+        pkg:
+        - mysql-server 
+        - python3-pymysql
+        state: latest
+        update_cache: yes
+      become: yes
+    - name: Create a new database with name 'wordpress_db'
+      community.mysql.mysql_db:
+        name: '{{ wp_db_name }}'
+        state: present
+        login_unix_socket: /run/mysqld/mysqld.sock
+      become: yes
+    - name: Create database user with name 'wordpress_user' and password '12345' with all database privileges
+      community.mysql.mysql_user:
+        name: '{{ wp_db_user }}'
+        password: '{{ wp_db_pass}}'
+        priv: '{{ wp_db_name }}.*:SELECT,INSERT,UPDATE,DELETE,CREATE,DROP,ALTER'
+        state: present
+        login_unix_socket: /run/mysqld/mysqld.sock
+        host: '{{ item }}'
+      with_items:
+      - 'localhost'
+      - '127.0.0.1'
+      - '{{ wp_ip }}'
+      become: yes
+    - name: configure database
+      ansible.builtin.replace:
+        path: /etc/mysql/mysql.conf.d/mysqld.cnf
+        regexp: "127.0.0.1"
+        replace: "0.0.0.0"
+      become: yes
+      notify:
+        - restart mysql
