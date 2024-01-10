@@ -80,6 +80,12 @@
       become: yes
 
 - hosts: mysql
+  handlers:
+    - name: restart mysql
+      service:
+        name: mysql
+        state: restarted
+      become: yes
   tasks:
     - name: Install dependencias
       ansible.builtin.apt:
@@ -102,4 +108,17 @@
         priv: 'wordpress_db.*:SELECT,INSERT,UPDATE,DELETE,CREATE,DROP,ALTER'
         state: present
         login_unix_socket: /run/mysqld/mysqld.sock
+        host: "{{ item }}"
+      with_items:
+      - 'localhost'
+      - '127.0.0.1'
+      - '192.168.31.76'
       become: yes
+    - name: configure database
+      ansible.builtin.replace:
+        path: /etc/mysql/mysql.conf.d/mysqld.cnf
+        regexp: "127.0.0.1"
+        replace: "0.0.0.0"
+      become: yes
+      notify:
+        - restart mysql
