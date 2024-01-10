@@ -6,7 +6,7 @@
         pkg:
         - apache2
         - ghostscript
-        - mysql 
+        - mysql-server
         - libapache2-mod-php 
         - php 
         - php-bcmath 
